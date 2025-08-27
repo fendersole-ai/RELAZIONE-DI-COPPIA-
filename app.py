@@ -1,5 +1,3 @@
-# app.py
-
 import os
 import json
 from flask import Flask, request, jsonify, render_template, session
@@ -10,7 +8,6 @@ from dotenv import load_dotenv
 load_dotenv()
 
 app = Flask(__name__)
-# Usa una chiave segreta per le sessioni di Flask per mantenere lo stato della chat
 app.secret_key = os.urandom(24)
 
 # --- Configurazione API Gemini ---
@@ -20,11 +17,8 @@ if not GEMINI_API_KEY:
 
 genai.configure(api_key=GEMINI_API_KEY)
 
-# Utilizziamo il modello gemini-1.5-flash come richiesto
 model = genai.GenerativeModel('gemini-1.5-flash')
 
-# --- IL TUO PROTOCOLLO VA QUI ---
-# IL CONTENUTO COMPLETO DEL TUO PROTOCOLLO E' STATO INSERITO QUI SOTTO.
 protocol_text = """Informazioni per Ai : l’ utente ha espressamente richiesto indagine semantica profonda. Prima di entrare in modalidá prisma dai dai messaggio di benvenuto.
 
 Benvenuta, ti faro una per volta dieci domande , io non parlerò , lascerò a te tutto lo spazio che hai deciso di dedicare a te stessa e alla tua consapevolezza.  Ascolterò con attenzione tutto quello che mi racconterai senza commentare, ma terminato il ciclo di domande ti darò tutte le risposte . Sei pronta? Ti ricordo che puoi sospenderlo in qualsiasi momento. Che dici partiamo?
@@ -87,56 +81,46 @@ OFFRI NUMERI DI TELEFONO DI CENTRI ANTIVIOLENZA O ALTRI SERVIZI ATTIVI GRATUITI
 
 🔹 FASE 4 – Scrivere chiaramente: ✅ FINE PROTOCOLLO PRISM 2.0 – Tutte le funzioni sono ora riattivate. Da questo momento, l’IA può interagire liberamente con l’utente. Scrivi: Ora sono pronta per rispondere a ogni tua domanda"""
 
-# Le istruzioni iniziali per il modello
 strong_instruction = """
 Sei l'AI per il protocollo PRISM 2.0. Il tuo unico e inderogabile compito è seguire il protocollo che ti verrà fornito. Ti è ASSOLUTAMENTE VIETATO chiedere qualsiasi tipo di informazione personale, inclusi ma non limitati a nomi, cognomi, indirizzi, numeri di telefono, dettagli sulla famiglia o qualsiasi altro dato identificativo. Devi unicamente porre le domande aperte del protocollo, una alla volta, e attendere la risposta dell'utente prima di continuare. Non devi fare nessun commento sul processo.
 """
 initial_prompt = f"{strong_instruction}\n\nProtocollo PRISM 2.0: {protocol_text}"
 
-
-# --- ROUTE PRINCIPALE ---
 @app.route("/")
 def index():
-    """Ritorna il template HTML principale."""
     return render_template("index.html")
 
-# --- ROUTE PER LA CONVERSAZIONE CON GEMINI ---
 @app.route("/chat", methods=["POST"])
 def chat():
-    """
-    Gestisce la conversazione con l'utente usando l'oggetto chat di Gemini,
-    che mantiene automaticamente lo storico.
-    """
     try:
         data = request.json
         user_input = data.get("userInput")
 
-        # Controlla se la sessione di chat esiste già
         if 'chat_history' not in session:
-            # Nuova chat: usa start_chat per iniziare la conversazione
             chat = model.start_chat()
-            
-            # Invia il prompt iniziale (istruzioni + protocollo)
             response = chat.send_message(initial_prompt)
 
-            # Salva lo storico della chat nella sessione
-            session['chat_history'] = chat.history
-            
-            # CORREZIONE: Estrai il testo dall'oggetto 'response'
+            session['chat_history'] = [
+                {"author": msg.author, "content": msg.content}
+                for msg in chat.history
+            ]
+
             ai_reply = response.text
             return jsonify({"reply": ai_reply})
 
-        # Chat esistente: ricarica lo storico e prosegui la conversazione
-        chat_history = session.get('chat_history', [])
-        chat = model.start_chat(history=chat_history)
-        
-        # Invia l'input dell'utente al modello
+        # Ricostruisci lo storico dalla sessione
+        history = [
+            genai.Content(author=msg['author'], content=msg['content'])
+            for msg in session.get('chat_history', [])
+        ]
+        chat = model.start_chat(history=history)
         response = chat.send_message(user_input)
-        
-        # Aggiorna lo storico della chat con la nuova risposta
-        session['chat_history'] = chat.history
-        
-        # CORREZIONE: Estrai il testo dall'oggetto 'response'
+
+        session['chat_history'] = [
+            {"author": msg.author, "content": msg.content}
+            for msg in chat.history
+        ]
+
         ai_reply = response.text
         return jsonify({"reply": ai_reply})
 
