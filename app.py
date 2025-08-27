@@ -111,37 +111,32 @@ def chat():
         data = request.json
         user_input = data.get("userInput")
 
-        # Controlla se la sessione di chat esiste già
+        # Se non esiste ancora la cronologia: inizializza con protocollo + messaggio di benvenuto
         if 'chat_history' not in session:
-            # Crea l'oggetto che contiene il protocollo come istruzioni iniziali
-            initial_history = [
-                {'role': 'user', 'parts': [{'text': initial_prompt}]},
-                {'role': 'model', 'parts': [{'text': "Benvenuta, ti faro una per volta dieci domande , io non parlerò , lascerò a te tutto lo spazio che hai deciso di dedicare a te stessa e alla tua consapevolezza.  Ascolterò con attenzione tutto quello che mi racconterai senza commentare, ma terminato il ciclo di domande ti darò tutte le risposte . Sei pronta? Ti ricordo che puoi sospenderlo in qualsiasi momento. Che dici partiamo?"}]}
+            session['chat_history'] = [
+                {"role": "user", "parts": [initial_prompt]},
+                {"role": "model", "parts": ["Benvenuta, ti faro una per volta dieci domande , io non parlerò , lascerò a te tutto lo spazio che hai deciso di dedicare a te stessa e alla tua consapevolezza.  Ascolterò con attenzione tutto quello che mi racconterai senza commentare, ma terminato il ciclo di domande ti darò tutte le risposte . Sei pronta? Ti ricordo che puoi sospenderlo in qualsiasi momento. Che dici partiamo?"]}
             ]
-            
-            # Avvia una nuova chat con la cronologia predefinita
-            chat = model.start_chat(history=[genai.types.Content.from_dict(m) for m in initial_history])
+            # Mostra subito il messaggio di benvenuto
+            return jsonify({"reply": session['chat_history'][1]["parts"][0]})
 
-            # Salva la cronologia iniziale nella sessione
-            session['chat_history'] = [message.to_dict() for message in chat.history]
-            
-            # Restituisce la prima risposta dell'AI dal protocollo
-            ai_reply = "Benvenuta, ti faro una per volta dieci domande , io non parlerò , lascerò a te tutto lo spazio che hai deciso di dedicare a te stessa e alla tua consapevolezza. Ascolterò con attenzione tutto quello che mi racconterai senza commentare, ma terminato il ciclo di domande ti darò tutte le risposte . Sei pronta? Ti ricordo che puoi sospenderlo in qualsiasi momento. Che dici partiamo?"
-            return jsonify({"reply": ai_reply})
+        # Ricostruisci cronologia in formato semplice
+        history = [
+            {"role": m["role"], "parts": m["parts"]}
+            for m in session.get("chat_history", [])
+        ]
 
-        # Chat esistente: ricarica lo storico e prosegui la conversazione
-        chat_history = session.get('chat_history', [])
-        chat = model.start_chat(history=[genai.types.Content.from_dict(m) for m in chat_history])
-        
-        # Invia l'input dell'utente al modello
+        # Avvia chat con cronologia ricostruita
+        chat = model.start_chat(history=history)
+
+        # Invia messaggio dell'utente
         response = chat.send_message(user_input)
-        
-        # Aggiorna lo storico della chat con la nuova risposta
-        session['chat_history'] = [message.to_dict() for message in chat.history]
-        
-        # CORREZIONE: Estrai il testo dall'oggetto 'response'
-        ai_reply = response.text
-        return jsonify({"reply": ai_reply})
+
+        # Aggiorna cronologia solo con stringhe
+        session['chat_history'].append({"role": "user", "parts": [str(user_input)]})
+        session['chat_history'].append({"role": "model", "parts": [str(response.text)]})
+
+        return jsonify({"reply": response.text})
 
     except Exception as e:
         print(f"Si è verificato un errore: {e}")
