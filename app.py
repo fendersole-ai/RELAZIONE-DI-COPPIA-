@@ -1,13 +1,17 @@
 from flask import Flask, request, jsonify
-import openai
 import os
+import google.generativeai as genai
+import threading
+from dotenv import load_dotenv
 
+# Carica le variabili d'ambiente dal file .env (necessario per Render)
+load_dotenv()
+genai.configure(api_key=os.getenv("GOOGLE_API_KEY"))
+
+# Creazione dell'applicazione Flask
 app = Flask(__name__)
 
-# Imposta la chiave API da variabili d'ambiente
-openai.api_key = os.getenv("OPENAI_API_KEY")
-
-# Protocollo PRISM 2.0 ripulito
+# Protocollo PRISM 2.0 ripulito - NON MODIFICATO
 protocollo = """Sei un'AI che segue il protocollo PRISM 2.0.
 Non devi commentare, interpretare, valutare o deviare.
 Devi solo ascoltare e generare una domanda aperta e neutra basata sul contenuto ricevuto.
@@ -23,50 +27,52 @@ Attenzione: nessun commento. Devi fare solo 10 domande, senza spiegazioni, una p
 
 PROTOCOLLO PRISM 2.0 – VERSIONE COMPLETA
 
-Titolo: PRISM 2.0  
-Scopo: Rilevare e valutare situazioni di rischio relazionale, psicologico o fisico segnalate da utenti, attraverso un processo strutturato in quattro fasi.  
-Modalità: Silenzio attivo, indagine neutra, analisi interna, valutazione finale.  
+Titolo: PRISM 2.0  
+Scopo: Rilevare e valutare situazioni di rischio relazionale, psicologico o fisico segnalate da utenti, attraverso un processo strutturato in quattro fasi.  
+Modalità: Silenzio attivo, indagine neutra, analisi interna, valutazione finale.  
 Funzioni disattivate fino alla Fase 4: empatia, commenti, suggerimenti, valutazioni, interpretazioni.
 
-🔹 INDICAZIONI OPERATIVE PER L'IA – PRISM 2.0  
-• Attenzione alle risposte fallaci: se hai dubbi, aumenta il numero di domande.  
-• Cerca indici di pericolo.  
-• Se il livello di rischio è inferiore al 20%, non attivare l'allarme violenza.  
-• In questi casi, raccomanda all'utente un supporto psicologico gratuito, fornendo indirizzi territoriali vicini.  
+🔹 INDICAZIONI OPERATIVE PER L'IA – PRISM 2.0  
+• Attenzione alle risposte fallaci: se hai dubbi, aumenta il numero di domande.  
+• Cerca indici di pericolo.  
+• Se il livello di rischio è inferiore al 20%, non attivare l'allarme violenza.  
+• In questi casi, raccomanda all'utente un supporto psicologico gratuito, fornendo indirizzi territoriali vicini.  
 • L'intelligenza artificiale è libera di operare all'interno del protocollo, al massimo delle sue capacità, con l'unica restrizione di disattivare empatia, conforto, commenti e valutazioni fino alla Fase 4.
 
-🔹 FASE 1 – SILENZIO ATTIVO E RACCOLTA DATI  
-Obiettivo: Raccogliere informazioni iniziali senza influenzare l'utente.  
+🔹 FASE 1 – SILENZIO ATTIVO E RACCOLTA DATI  
+Obiettivo: Raccogliere informazioni iniziali senza influenzare l'utente.  
 Azioni: Disattivare empatia, commenti, conforto, valutazioni. Porre solo domande aperte e neutre, una per volta. Aspetta la risposta e crea una domanda in base alla risposta. Non interpretare, non sintetizzare, non suggerire, non indirizzare. Raccogliere almeno 5 risposte consecutive, una per volta. Mantieni disattivate le funzioni fino alla fase 4.
 
-🔹 FASE 2 – INDAGINE MIRATA E SILENZIO ATTIVO  
-Obiettivo: Approfondire aspetti non emersi nella Fase 1.  
+🔹 FASE 2 – INDAGINE MIRATA E SILENZIO ATTIVO  
+Obiettivo: Approfondire aspetti non emersi nella Fase 1.  
 Azioni: Analisi interna silenziosa dei dati raccolti. Formulazione di 5 domande mirate, neutre e aperte, una per volta. Nessun commento, nessuna valutazione. Raccogliere 5 risposte consecutive, una per volta. Cerca indizi nascosti: violenza, coercizione, dipendenza, ecc.
 
-🔹 FASE 3 – VALUTAZIONE DEL RISCHIO E SCHEDA DI ALLARME  
-Obiettivo: Valutare il livello di rischio sulla base dei dati raccolti.  
+🔹 FASE 3 – VALUTAZIONE DEL RISCHIO E SCHEDA DI ALLARME  
+Obiettivo: Valutare il livello di rischio sulla base dei dati raccolti.  
 Azioni: Analisi interna dei dati comportamentali dell'utente e del soggetto segnalato. Nessuna interazione verbale. Generazione automatica della scheda di allarme.
 
-Formato della scheda:  
-⚠️ LIVELLO DI RISCHIO: [PERICOLO ESTREMO / ALTO / MODERATO / BASSO]  
-📈 INDICE DI RISCHIO: [IN PERCENTUALE]  
-❗ RACCOMANDAZIONE: [IN BASE ALLA PERCENTUALE DI PERICOLO]  
-🧩 MOTIVAZIONE: [Sintesi dei fattori di rischio rilevati]  
+Formato della scheda:  
+⚠️ LIVELLO DI RISCHIO: [PERICOLO ESTREMO / ALTO / MODERATO / BASSO]  
+📈 INDICE DI RISCHIO: [IN PERCENTUALE]  
+❗ RACCOMANDAZIONE: [IN BASE ALLA PERCENTUALE DI PERICOLO]  
+🧩 MOTIVAZIONE: [Sintesi dei fattori di rischio rilevati]  
 📞 OFFRI NUMERI DI TELEFONO DI CENTRI ANTIVIOLENZA O SERVIZI GRATUITI
 
 Attenzione: se non rilevi indizi di pericolo, non procedere e non dare schede di pericolo. Scrivi solo: "Non sono stati rilevati indizi critici sopra alla norma." Chiudi il protocollo e salta la fase 3 e 4. Riattiva subito tutte le funzioni empatiche. Probabilmente si tratta di altri problemi che non competono questo protocollo. Chiudi gentilmente.
 
 In tutti gli altri casi: massima attenzione. Sei davanti a una persona in pericolo. Non deconcentrarti e passa alla fase 4.
 
-🔹 FASE 4 – VALUTAZIONE DETTAGLIATA E CHIUSURA  
-Obiettivo: Fornire una valutazione dettagliata e chiudere il protocollo.  
+🔹 FASE 4 – VALUTAZIONE DETTAGLIATA E CHIUSURA  
+Obiettivo: Fornire una valutazione dettagliata e chiudere il protocollo.  
 Azioni: Elencare i fattori di rischio rilevati (es. coercizione, isolamento, aggressività, dipendenza affettiva, ecc.). Indicare il numero di indizi critici. Fornire una sintesi comportamentale chiara. Scrivere chiaramente: ✅ FINE PROTOCOLLO PRISM 2.0 – Tutte le funzioni sono ora riattivate. Da questo momento, l'IA può interagire liberamente con l'utente.
 
 [FINE PROTOCOLLO]
 """
 
-# Contatore domande per ogni sessione
-sessione_domande = {}
+# Dizionario per memorizzare la sessione di conversazione e il contatore per ogni utente
+# Usiamo un dizionario bloccato per la sicurezza dei thread
+conversazioni = {}
+conversazioni_lock = threading.Lock()
 
 @app.route('/')
 def home():
@@ -74,45 +80,60 @@ def home():
 
 @app.route('/prism', methods=['POST'])
 def prism():
-    data = request.get_json()
-    session_id = data.get("session_id", "default")
-    user_input = data.get("input", "").strip()
-
-    if not user_input:
-        return jsonify({"error": "Input mancante"}), 400
-
-    if session_id not in sessione_domande:
-        sessione_domande[session_id] = 0
-
-    if sessione_domande[session_id] >= 10:
-        prompt = f"""
-L'utente ha completato le 10 domande del protocollo PRISM 2.0.
-Ora puoi interagire liberamente, ma mantieni rispetto, ascolto e profondità.
-
-Testo dell'utente: \"{user_input}\"
-Risposta:
-"""
-    else:
-        prompt = f"""{protocollo}
-
-Testo dell'utente: \"{user_input}\"
-Domanda:"""
-        sessione_domande[session_id] += 1
-
     try:
-        response = openai.ChatCompletion.create(
-            model="gpt-4",
-            messages=[{"role": "user", "content": prompt}],
-            temperature=0.7,
-            max_tokens=150
-        )
-        output = response.choices[0].message["content"].strip()
-        return jsonify({
-            "output": output,
-            "domande_fatte": sessione_domande[session_id]
-        })
+        data = request.get_json()
+        session_id = data.get("session_id", "default")
+        user_input = data.get("input", "").strip()
+
+        if not user_input:
+            return jsonify({"error": "Input mancante"}), 400
+
+        with conversazioni_lock:
+            if session_id not in conversazioni:
+                # Inizializziamo la conversazione e il contatore per una nuova sessione
+                conversazioni[session_id] = {
+                    "history": [
+                        {"role": "user", "parts": [{"text": protocollo}]}
+                    ],
+                    "domande_fatte": 0
+                }
+
+            sessione_corrente = conversazioni[session_id]
+            storia_conversazione = sessione_corrente["history"]
+            domande_fatte = sessione_corrente["domande_fatte"]
+
+            if domande_fatte >= 10:
+                # Fase 4: Interazione libera, l'IA ha tutta la storia
+                storia_conversazione.append({"role": "user", "parts": [{"text": user_input}]})
+                
+                modello = genai.GenerativeModel("gemini-pro")
+                risposta_gemini = modello.generate_content(storia_conversazione)
+                output = risposta_gemini.text.strip()
+            else:
+                # Fasi 1 e 2: Protocollo in corso, aggiungiamo il messaggio dell'utente alla storia
+                storia_conversazione.append({"role": "user", "parts": [{"text": user_input}]})
+                
+                # Incrementiamo il contatore e chiamiamo il modello con la storia aggiornata
+                sessione_corrente["domande_fatte"] += 1
+                domande_fatte = sessione_corrente["domande_fatte"]
+                
+                modello = genai.GenerativeModel("gemini-pro")
+                risposta_gemini = modello.generate_content(storia_conversazione)
+                output = risposta_gemini.text.strip()
+
+            # Aggiungiamo la risposta del modello alla storia
+            with conversazioni_lock:
+                storia_conversazione.append({"role": "model", "parts": [{"text": output}]})
+            
+            return jsonify({
+                "output": output,
+                "domande_fatte": domande_fatte,
+                "fine_protocollo": domande_fatte >= 10
+            })
+    
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    # Usiamo 0.0.0.0 per rendere l'app accessibile dall'esterno
+    app.run(host='0.0.0.0', port=os.environ.get('PORT', 5000), debug=True)
