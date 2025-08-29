@@ -3,105 +3,115 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>PRISM 2.0</title>
+    <title>PRISM 2.0 – Test di Autovalutazione</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
 <body>
 
-    <div id="popup-consenso" class="popup-overlay">
-        <div class="popup-content">
-            <h3>Consenso e Privacy</h3>
-            <p>
-                Il protocollo "PRISM 2.0" è stato ideato per analizzare, tramite tecniche di indagine semantica profonda, le conversazioni al fine di rilevare la possibile presenza di indizi di violenza o abuso relazionale. La tua privacy è per noi una priorità assoluta, e pertanto il tuo anonimato sarà garantito in ogni fase dell'interazione. I dati della conversazione verranno archiviati in un database sicuro, ma in forma anonima e criptata, e non verranno in alcun caso associati alla tua identità. Le informazioni verranno utilizzate per migliorare il modello di apprendimento automatico del protocollo "PRISM 2.0". 
-                <br>
-                Qualora il protocollo dovesse rilevare indizi critici che potrebbero far pensare a una condizione di pericolo per la tua persona, ti verranno forniti i contatti di centri di supporto gratuiti presenti sul territorio nazionale.
-            </p>
-            <div class="popup-buttons">
-                <button id="accetto">Accetto</button>
-                <button id="annulla">Annulla</button>
-            </div>
+<div id="popup-consenso" class="popup-overlay">
+    <div class="popup-content">
+        <h2>Consenso Informato</h2>
+        <p>
+            Benvenuto in PRISM 2.0, un test gratuito e anonimo disponibile 24h su 24.
+            PRISM è uno strumento di intelligenza artificiale progettato per rilevare possibili indicatori di rischio tramite 10 domande aperte.
+            Non è una diagnosi, non sostituisce il personale specializzato ed è paragonabile a un termometro: indica soltanto il livello di rischio rilevato.
+        </p>
+        <p>
+            Questo test è uno strumento sperimentale basato su intelligenza artificiale. Non è validato come diagnosi clinica o valutazione ufficiale. L’uso è anonimo, gratuito e i dati non vengono memorizzati. L’AI si limita ad analizzare le risposte per generare un indicatore di rischio. Accedendo, confermi di aver compreso queste condizioni.
+        </p>
+        <div class="popup-buttons">
+            <button id="accetto">ACCETTO</button>
+            <button id="annulla">ANNULLA</button>
         </div>
     </div>
+</div>
 
-    <div id="chat-container">
-        <header>
-            <img src="/static/prisma.jpg" alt="Logo Prisma" style="height: 40px;">
-        </header>
-        <div id="chat-messages" class="chat-messages"></div>
-        <div class="chat-input-area">
-            <input type="text" id="user-input" placeholder="Scrivi un messaggio...">
-            <button id="send-btn">➔</button>
+<div id="chat-container">
+    <header>
+        <h1>PRISM 2.0</h1>
+    </header>
+    <div class="chat-messages" id="chat-messages">
         </div>
+    <div class="chat-input-area">
+        <textarea id="user-input" placeholder="Scrivi qui la tua risposta..."></textarea>
+        <button id="send-btn">Invia</button>
     </div>
+</div>
 
-    <script>
-        document.addEventListener('DOMContentLoaded', () => {
-            const popupConsenso = document.getElementById('popup-consenso');
-            const chatContainer = document.getElementById('chat-container');
-            const accettoBtn = document.getElementById('accetto');
-            const annullaBtn = document.getElementById('annulla');
-            const sendBtn = document.getElementById('send-btn');
-            const userInput = document.getElementById('user-input');
-            const chatMessages = document.getElementById('chat-messages');
-        
-            const sessionId = "default";
-        
-            async function sendMessage(inputText) {
-                if (!inputText.trim()) return;
-        
-                addMessageToChat(inputText, 'user-message');
-                userInput.value = '';
-        
-                try {
-                    const resp = await fetch('/prism', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({
-                            session_id: sessionId,
-                            input: inputText
-                        })
-                    });
-        
-                    const data = await resp.json();
-                    if (data.output) {
-                        addMessageToChat(data.output, 'ai-message');
-                    } else {
-                        addMessageToChat("Risposta non valida dal server.", 'ai-message');
-                    }
-                } catch (error) {
-                    addMessageToChat("Si è verificato un errore. Per favore, riprova.", 'ai-message');
-                }
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    const popupConsenso = document.getElementById('popup-consenso');
+    const chatContainer = document.getElementById('chat-container');
+    const accettoBtn = document.getElementById('accetto');
+    const annullaBtn = document.getElementById('annulla');
+    const sendBtn = document.getElementById('send-btn');
+    const userInput = document.getElementById('user-input');
+    const chatMessages = document.getElementById('chat-messages');
+
+    const sessionId = "default"; // Aggiunto per il backend
+
+    // Funzione per inviare un messaggio
+    async function sendMessage(inputText) { // Riceve l'input come argomento
+        if (!inputText.trim()) return;
+
+        // Aggiunge il messaggio dell'utente alla chat
+        addMessageToChat(inputText, 'user-message');
+        userInput.value = '';
+
+        try {
+            const resp = await fetch('/prism', { // Corretto l'endpoint
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({ session_id: sessionId, input: inputText }) // Corretto il formato dei dati
+            });
+            const data = await resp.json();
+            if (data.output) { // Corretto il nome della chiave di risposta
+                 addMessageToChat(data.output, 'ai-message');
+            } else {
+                addMessageToChat("Risposta non valida dal server.", 'ai-message');
             }
-        
-            function addMessageToChat(text, sender) {
-                const messageDiv = document.createElement('div');
-                messageDiv.classList.add('message', sender);
-                messageDiv.textContent = text;
-                chatMessages.appendChild(messageDiv);
-                chatMessages.scrollTop = chatMessages.scrollHeight;
-            }
-        
-            accettoBtn.addEventListener('click', () => {
-                popupConsenso.style.display = 'none';
-                chatContainer.style.display = 'flex';
-                sendMessage('si');
-            });
-        
-            annullaBtn.addEventListener('click', () => {
-                alert("Hai annullato. Ricarica la pagina per riprovare.");
-            });
-        
-            sendBtn.addEventListener('click', () => {
-                sendMessage(userInput.value);
-            });
-        
-            userInput.addEventListener('keypress', (e) => {
-                if (e.key === 'Enter') {
-                    e.preventDefault();
-                    sendMessage(userInput.value);
-                }
-            });
-        });
-    </script>
+        } catch (error) {
+            addMessageToChat("Si è verificato un errore. Per favore, riprova.", 'ai-message');
+        }
+    }
+
+    // Funzione per aggiungere un messaggio al contenitore della chat
+    function addMessageToChat(text, sender) {
+        const messageDiv = document.createElement('div');
+        messageDiv.classList.add('message', sender);
+        messageDiv.textContent = text;
+        chatMessages.appendChild(messageDiv);
+        chatMessages.scrollTop = chatMessages.scrollHeight; // Scrolla automaticamente in basso
+    }
+
+    // Clic su "ACCETTO"
+    accettoBtn.addEventListener('click', () => {
+        popupConsenso.style.display = 'none';
+        chatContainer.style.display = 'flex';
+        // Invia il primo messaggio al backend per avviare il protocollo
+        sendMessage('si'); // Usa la funzione sendMessage aggiornata
+    });
+
+    // Clic su "ANNULLA"
+    annullaBtn.addEventListener('click', () => {
+        alert("Hai annullato. Ricarica la pagina per riprovare.");
+    });
+
+    // Clic sul pulsante "Invia"
+    sendBtn.addEventListener('click', () => {
+         sendMessage(userInput.value);
+    });
+
+    // Invio con il tasto "Invio" sulla tastiera
+    userInput.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') {
+            e.preventDefault(); // Evita il newline nella textarea
+            sendMessage(userInput.value);
+        }
+    });
+
+});
+</script>
+
 </body>
 </html>
