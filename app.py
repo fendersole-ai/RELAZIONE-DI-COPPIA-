@@ -1,4 +1,4 @@
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify, render_template
 import os
 import google.generativeai as genai
 import threading
@@ -76,7 +76,7 @@ conversazioni_lock = threading.Lock()
 
 @app.route('/')
 def home():
-    return "PRISM 2.0 è attivo."
+    return render_template('index.html')
 
 @app.route('/prism', methods=['POST'])
 def prism():
