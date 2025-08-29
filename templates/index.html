@@ -48,24 +48,24 @@ document.addEventListener('DOMContentLoaded', () => {
     const userInput = document.getElementById('user-input');
     const chatMessages = document.getElementById('chat-messages');
 
-    const sessionId = "default"; // Aggiunto per il backend
+    // Genera un sessionId unico e casuale per ogni sessione
+    const sessionId = 'session-' + Math.random().toString(36).substr(2, 9);
 
     // Funzione per inviare un messaggio
-    async function sendMessage(inputText) { // Riceve l'input come argomento
+    async function sendMessage(inputText) {
         if (!inputText.trim()) return;
 
-        // Aggiunge il messaggio dell'utente alla chat
         addMessageToChat(inputText, 'user-message');
         userInput.value = '';
 
         try {
-            const resp = await fetch('/prism', { // Corretto l'endpoint
+            const resp = await fetch('/prism', {
                 method: 'POST',
                 headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({ session_id: sessionId, input: inputText }) // Corretto il formato dei dati
+                body: JSON.stringify({ session_id: sessionId, input: inputText })
             });
             const data = await resp.json();
-            if (data.output) { // Corretto il nome della chiave di risposta
+            if (data.output) {
                  addMessageToChat(data.output, 'ai-message');
             } else {
                 addMessageToChat("Risposta non valida dal server.", 'ai-message');
@@ -88,8 +88,7 @@ document.addEventListener('DOMContentLoaded', () => {
     accettoBtn.addEventListener('click', () => {
         popupConsenso.style.display = 'none';
         chatContainer.style.display = 'flex';
-        // Invia il primo messaggio al backend per avviare il protocollo
-        sendMessage('si'); // Usa la funzione sendMessage aggiornata
+        sendMessage('si');
     });
 
     // Clic su "ANNULLA"
@@ -109,7 +108,6 @@ document.addEventListener('DOMContentLoaded', () => {
             sendMessage(userInput.value);
         }
     });
-
 });
 </script>
 
