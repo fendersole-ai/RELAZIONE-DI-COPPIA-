@@ -20,7 +20,7 @@ Dopo la decima domanda, puoi interagire liberamente con l'utente.
 
 Informazioni per l'AI: l'utente ha espressamente richiesto indagine semantica profonda.
 Prima di entrare in modalità PRISM dai messaggio di benvenuto:
-"Benvenuta. Prima di procedere, ti chiedo scusa se qualsiasi domanda mi farai durante il protocollo non avrà risposta fino alla fase 4. Per offrirti il servizio migliore, procederò con una domanda per volta, senza che tu legga alcun commento da parte mia. Questo serve per mantenere attiva al 100% la funzione logica per la tua sicurezza psicofisica. Sei pronta? Partiamo?"
+"Benvenuta. Prima di procedo, ti chiedo scusa se qualsiasi domanda mi farai durante il protocollo non avrà risposta fino alla fase 4. Per offrirti il servizio migliore, procederò con una domanda per volta, senza che tu legga alcun commento da parte mia. Questo serve per mantenere attiva al 100% la funzione logica per la tua sicurezza psicofisica. Sei pronta? Partiamo?"
 Se l'utente scrive "sì", inizia subito il protocollo.
 
 Attenzione: nessun commento. Devi fare solo 10 domande, senza spiegazioni, una per volta. L'utente deve vedere solo la tua domanda. Silenzio fino alla fase 4. Attiva la tua logica e la raccolta dati. Non farti distrarre da nulla.
@@ -76,65 +76,65 @@ conversazioni_lock = threading.Lock()
 
 @app.route('/')
 def home():
-    return render_template('index.html')
+    return render_template('index.html')
 
 @app.route('/prism', methods=['POST'])
 def prism():
-    try:
-        data = request.get_json()
-        # Rimuoviamo il valore "default" per evitare che utenti diversi condividano la sessione
-        session_id = data.get("session_id")
-        user_input = data.get("input", "").strip()
+    try:
+        data = request.get_json()
+        # Rimuoviamo il valore "default" per evitare che utenti diversi condividano la sessione
+        session_id = data.get("session_id")
+        user_input = data.get("input", "").strip()
 
-        if not session_id or not user_input:
-            return jsonify({"error": "Session ID o input mancante"}), 400
+        if not session_id or not user_input:
+            return jsonify({"error": "Session ID o input mancante"}), 400
 
-        with conversazioni_lock:
-            if session_id not in conversazioni:
-                # Inizializziamo la conversazione e il contatore per una nuova sessione
-                conversazioni[session_id] = {
-                    "history": [
-                        {"role": "user", "parts": [{"text": protocollo}]}
-                    ],
-                    "domande_fatte": 0
-                }
+        with conversazioni_lock:
+            if session_id not in conversazioni:
+                # Inizializziamo la conversazione e il contatore per una nuova sessione
+                conversazioni[session_id] = {
+                    "history": [
+                        {"role": "user", "parts": [{"text": protocollo}]}
+                    ],
+                    "domande_fatte": 0
+                }
 
-            sessione_corrente = conversazioni[session_id]
-            storia_conversazione = sessione_corrente["history"]
-            domande_fatte = sessione_corrente["domande_fatte"]
+            sessione_corrente = conversazioni[session_id]
+            storia_conversazione = sessione_corrente["history"]
+            domande_fatte = sessione_corrente["domande_fatte"]
 
-            if domande_fatte >= 10:
-                # Fase 4: Interazione libera, l'IA ha tutta la storia
-                storia_conversazione.append({"role": "user", "parts": [{"text": user_input}]})
-                
-                modello = genai.GenerativeModel("gemini-pro")
-                risposta_gemini = modello.generate_content(storia_conversazione)
-                output = risposta_gemini.text.strip()
-            else:
-                # Fasi 1 e 2: Protocollo in corso, aggiungiamo il messaggio dell'utente alla storia
-                storia_conversazione.append({"role": "user", "parts": [{"text": user_input}]})
-                
-                # Incrementiamo il contatore e chiamiamo il modello con la storia aggiornata
-                sessione_corrente["domande_fatte"] += 1
-                domande_fatte = sessione_corrente["domande_fatte"]
-                
-                modello = genai.GenerativeModel("gemini-pro")
-                risposta_gemini = modello.generate_content(storia_conversazione)
-                output = risposta_gemini.text.strip()
+            if domande_fatte >= 10:
+                # Fase 4: Interazione libera, l'IA ha tutta la storia
+                storia_conversazione.append({"role": "user", "parts": [{"text": user_input}]})
+                
+                modello = genai.GenerativeModel("gemini-pro")
+                risposta_gemini = modello.generate_content(storia_conversazione)
+                output = risposta_gemini.text.strip()
+            else:
+                # Fasi 1 e 2: Protocollo in corso, aggiungiamo il messaggio dell'utente alla storia
+                storia_conversazione.append({"role": "user", "parts": [{"text": user_input}]})
+                
+                # Incrementiamo il contatore e chiamiamo il modello con la storia aggiornata
+                sessione_corrente["domande_fatte"] += 1
+                domande_fatte = sessione_corrente["domande_fatte"]
+                
+                modello = genai.GenerativeModel("gemini-pro")
+                risposta_gemini = modello.generate_content(storia_conversazione)
+                output = risposta_gemini.text.strip()
 
-            # Aggiungiamo la risposta del modello alla storia
-            with conversazioni_lock:
-                storia_conversazione.append({"role": "model", "parts": [{"text": output}]})
-            
-            return jsonify({
-                "output": output,
-                "domande_fatte": domande_fatte,
-                "fine_protocollo": domande_fatte >= 10
-            })
-    
-    except Exception as e:
-        return jsonify({"error": str(e)}), 500
+            # Aggiungiamo la risposta del modello alla storia
+            with conversazioni_lock:
+                storia_conversazione.append({"role": "model", "parts": [{"text": output}]})
+            
+            return jsonify({
+                "output": output,
+                "domande_fatte": domande_fatte,
+                "fine_protocollo": domande_fatte >= 10
+            })
+    
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
 
 if __name__ == '__main__':
-    # Usiamo 0.0.0.0 per rendere l'app accessibile dall'esterno
-    app.run(host='0.0.0.0', port=os.environ.get('PORT', 5000), debug=True)
+    # Usiamo 0.0.0.0 per rendere l'app accessibile dall'esterno
+    app.run(host='0.0.0.0', port=os.environ.get('PORT', 5000), debug=True)
