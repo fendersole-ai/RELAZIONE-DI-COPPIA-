@@ -1,97 +1,122 @@
 <!DOCTYPE html>
 <html lang="it">
 <head>
-  <meta charset="UTF-8">
-  <title>PRISM 2.0 – Consenso Informato</title>
-  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PRISM 2.0 - Test di Autovalutazione</title>
+    <link rel="stylesheet" href="/static/style.css">
 </head>
 <body>
 
-<!-- Popup di consenso -->
 <div id="popup-consenso" class="popup-overlay">
-  <div class="popup-content">
-    <h2>Consenso Informato</h2>
-    <p>
-      Benvenuta in PRISM 2.0. Questo test è anonimo, gratuito e non memorizza alcun dato.
-      L'AI analizzerà le tue risposte per rilevare eventuali indicatori di rischio.
-      Accedendo, confermi di aver compreso queste condizioni.
-    </p>
-    <div class="popup-buttons">
-      <button id="accetto">ACCETTO</button>
-      <button id="annulla">ANNULLA</button>
+    <div class="popup-content">
+        <h2>Consenso Informato</h2>
+        <p>
+            Benvenuto in PRISM 2.0, un test gratuito e anonimo disponibile 24h su 24.
+            PRISM è uno strumento di intelligenza artificiale progettato per rilevare possibili indicatori di rischio tramite 10 domande aperte.
+            Non è una diagnosi, non sostituisce il personale specializzato ed è paragonabile a un termometro: indica soltanto il livello di rischio rilevato.
+        </p>
+        <p>
+            Questo test è uno strumento sperimentale basato su intelligenza artificiale. Non è validato come diagnosi clinica o valutazione ufficiale. L’uso è anonimo, gratuito e i dati non vengono memorizzati. L’AI si limita ad analizzare le risposte per generare un indicatore di rischio. Accedendo, confermi di aver compreso queste condizioni.
+        </p>
+        <div class="popup-buttons">
+            <button id="accetto">ACCETTO</button>
+            <button id="annulla">ANNULLA</button>
+        </div>
     </div>
-  </div>
 </div>
 
-<!-- Chat Prism -->
-<div id="chat-container" class="hidden">
-  <header><h1>PRISM 2.0</h1></header>
-  <div class="chat-messages" id="chat-messages"></div>
-  <div class="chat-input-area">
-    <textarea id="user-input" placeholder="Scrivi qui la tua risposta..."></textarea>
-    <button id="send-btn">Invia</button>
-  </div>
+<div id="chat-container">
+    <header>Protocollo PRISM 2.0</header>
+    <div id="chat-window" class="chat-window"></div>
+    <div class="chat-input-container">
+        <input type="text" id="messageInput" placeholder="Scrivi il tuo messaggio...">
+        <button id="sendButton">Invia</button>
+    </div>
 </div>
 
 <script>
-// JS per gestire il flusso
-document.addEventListener('DOMContentLoaded', () => {
-  const popup = document.getElementById('popup-consenso');
-  const chat = document.getElementById('chat-container');
-  const accetto = document.getElementById('accetto');
-  const annulla = document.getElementById('annulla');
-  const sendBtn = document.getElementById('send-btn');
-  const userInput = document.getElementById('user-input');
-  const chatMessages = document.getElementById('chat-messages');
-  const sessionId = 'session-' + Math.random().toString(36).substr(2, 9);
+    const popupConsenso = document.getElementById('popup-consenso');
+    const chatContainer = document.getElementById('chat-container');
+    const accettoBtn = document.getElementById('accetto');
+    const annullaBtn = document.getElementById('annulla');
+    const chatWindow = document.getElementById('chat-window');
+    const messageInput = document.getElementById('messageInput');
+    const sendButton = document.getElementById('sendButton');
 
-  function addMessage(text, sender) {
-    const msg = document.createElement('div');
-    msg.classList.add('message', sender);
-    msg.textContent = text;
-    chatMessages.appendChild(msg);
-    chatMessages.scrollTop = chatMessages.scrollHeight;
-  }
+    let sessionId = localStorage.getItem('sessionId') || crypto.randomUUID();
+    localStorage.setItem('sessionId', sessionId);
 
-  async function sendMessage(inputText) {
-    if (!inputText.trim() && inputText !== '_START_PROTOCOL_') return;
-    if (inputText !== '_START_PROTOCOL_') addMessage(inputText, 'user-message');
-    userInput.value = '';
-    try {
-      const res = await fetch('/prism', {
-        method: 'POST',
-        headers: {'Content-Type': 'application/json'},
-        body: JSON.stringify({ session_id: sessionId, input: inputText })
-      });
-      const data = await res.json();
-      if (data.output) addMessage(data.output, 'ai-message');
-    } catch {
-      addMessage("Errore di connessione.", 'ai-message');
+    function addMessage(text, sender) {
+        const messageElement = document.createElement('div');
+        messageElement.classList.add('message', sender);
+        messageElement.textContent = text;
+        chatWindow.appendChild(messageElement);
+        chatWindow.scrollTop = chatWindow.scrollHeight;
     }
-  }
 
-  accetto.addEventListener('click', () => {
-    popup.style.display = 'none';
-    chat.classList.remove('hidden');
-    sendMessage('_START_PROTOCOL_');
-  });
+    async function sendMessage(input) {
+        if (input.trim() === '') return;
 
-  annulla.addEventListener('click', () => {
-    popup.style.display = 'none';
-  });
+        if (input !== '_START_PROTOCOL_') {
+            addMessage(input, 'user');
+        }
 
-  sendBtn.addEventListener('click', () => {
-    sendMessage(userInput.value);
-  });
+        messageInput.value = '';
 
-  userInput.addEventListener('keypress', (e) => {
-    if (e.key === 'Enter') {
-      e.preventDefault();
-      sendMessage(userInput.value);
+        const loadingMessage = document.createElement('div');
+        loadingMessage.classList.add('loading');
+        loadingMessage.textContent = 'L’IA sta pensando...';
+        chatWindow.appendChild(loadingMessage);
+        chatWindow.scrollTop = chatWindow.scrollHeight;
+
+        try {
+            const response = await fetch('/prism', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ session_id: sessionId, input: input }),
+            });
+
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+
+            const data = await response.json();
+            chatWindow.removeChild(loadingMessage);
+            addMessage(data.output, 'ai');
+
+        } catch (error) {
+            console.error('Errore:', error);
+            chatWindow.removeChild(loadingMessage);
+            addMessage('Si è verificato un errore. Riprova più tardi.', 'ai');
+        }
     }
-  });
-});
+
+    accettoBtn.addEventListener('click', () => {
+        popupConsenso.style.display = 'none';
+        chatContainer.style.display = 'flex';
+        sendMessage('_START_PROTOCOL_');
+    });
+
+    annullaBtn.addEventListener('click', () => {
+        addMessage('Hai annullato. Ricarica la pagina per riprovare.', 'ai');
+        setTimeout(() => {
+            window.location.reload();
+        }, 3000);
+    });
+
+    sendButton.addEventListener('click', () => {
+        sendMessage(messageInput.value);
+    });
+
+    messageInput.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') {
+            e.preventDefault();
+            sendMessage(messageInput.value);
+        }
+    });
 </script>
-
 </body>
 </html>
