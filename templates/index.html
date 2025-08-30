@@ -78,7 +78,7 @@
             width: 100%;
             max-width: 600px;
             height: 90vh;
-            display: none;
+            display: none; /* Inizialmente nascosto */
             flex-direction: column;
             border-radius: 1.5rem;
             background-color: white;
@@ -196,7 +196,7 @@
     const chatWindow = document.getElementById('chat-window');
     const messageInput = document.getElementById('messageInput');
     const sendButton = document.getElementById('sendButton');
-
+    
     let sessionId = localStorage.getItem('sessionId') || crypto.randomUUID();
     localStorage.setItem('sessionId', sessionId);
 
@@ -211,9 +211,11 @@
     async function sendMessage(input) {
         if (input.trim() === '') return;
 
-        addMessage(input, 'user');
+        if (input !== '_START_PROTOCOL_') {
+            addMessage(input, 'user');
+        }
         messageInput.value = '';
-
+        
         const loadingMessage = document.createElement('div');
         loadingMessage.classList.add('loading');
         loadingMessage.textContent = 'L’IA sta pensando...';
@@ -236,6 +238,38 @@
             const data = await response.json();
             chatWindow.removeChild(loadingMessage);
             addMessage(data.output, 'ai');
-
+            
         } catch (error) {
-            console.error('Errore:', error
+            console.error('Errore:', error);
+            chatWindow.removeChild(loadingMessage);
+            addMessage('Si è verificato un errore. Riprova più tardi.', 'ai');
+        }
+    }
+
+    accettoBtn.addEventListener('click', () => {
+        popupConsenso.style.display = 'none';
+        chatContainer.style.display = 'flex';
+        sendMessage('_START_PROTOCOL_');
+    });
+
+    annullaBtn.addEventListener('click', () => {
+        addMessage('Hai annullato. Ricarica la pagina per riprovare.', 'ai');
+        setTimeout(() => {
+            window.location.reload();
+        }, 3000);
+    });
+
+    sendButton.addEventListener('click', () => {
+        sendMessage(messageInput.value);
+    });
+
+    messageInput.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') {
+            e.preventDefault();
+            sendMessage(messageInput.value);
+        }
+    });
+
+</script>
+</body>
+</html>
