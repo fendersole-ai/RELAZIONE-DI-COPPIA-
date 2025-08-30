@@ -26,12 +26,12 @@
     </div>
 </div>
 
-<div id="chat-container">
+<div id="chat-container" class="hidden">
     <header>
         <h1>PRISM 2.0</h1>
     </header>
     <div class="chat-messages" id="chat-messages">
-        </div>
+    </div>
     <div class="chat-input-area">
         <textarea id="user-input" placeholder="Scrivi qui la tua risposta..."></textarea>
         <button id="send-btn">Invia</button>
@@ -53,9 +53,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Funzione per inviare un messaggio
     async function sendMessage(inputText) {
-        if (!inputText.trim()) return;
+        if (!inputText.trim() && inputText !== '_START_PROTOCOL_') return;
 
-        addMessageToChat(inputText, 'user-message');
+        if (inputText !== '_START_PROTOCOL_') {
+            addMessageToChat(inputText, 'user-message');
+        }
         userInput.value = '';
 
         try {
@@ -66,7 +68,7 @@ document.addEventListener('DOMContentLoaded', () => {
             });
             const data = await resp.json();
             if (data.output) {
-                 addMessageToChat(data.output, 'ai-message');
+                addMessageToChat(data.output, 'ai-message');
             } else {
                 addMessageToChat("Risposta non valida dal server.", 'ai-message');
             }
@@ -87,18 +89,19 @@ document.addEventListener('DOMContentLoaded', () => {
     // Clic su "ACCETTO"
     accettoBtn.addEventListener('click', () => {
         popupConsenso.style.display = 'none';
-        chatContainer.style.display = 'flex';
-        sendMessage('si');
+        chatContainer.classList.remove('hidden');
+        // Invia un segnale speciale al backend per avviare il protocollo
+        sendMessage('_START_PROTOCOL_');
     });
 
     // Clic su "ANNULLA"
     annullaBtn.addEventListener('click', () => {
-        alert("Hai annullato. Ricarica la pagina per riprovare.");
+        popupConsenso.style.display = 'none';
     });
 
     // Clic sul pulsante "Invia"
     sendBtn.addEventListener('click', () => {
-         sendMessage(userInput.value);
+        sendMessage(userInput.value);
     });
 
     // Invio con il tasto "Invio" sulla tastiera
@@ -108,6 +111,7 @@ document.addEventListener('DOMContentLoaded', () => {
             sendMessage(userInput.value);
         }
     });
+
 });
 </script>
 
