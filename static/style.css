@@ -85,7 +85,7 @@ body {
     box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
 }
 
-.chat-window {
+.chat-messages {
     flex-grow: 1;
     overflow-y: auto;
     padding: 15px;
@@ -103,17 +103,17 @@ body {
     box-shadow: 0 1px 1px rgba(0, 0, 0, 0.1);
 }
 
-.message.user {
+.user-message {
     background-color: #dcf8c6;
     align-self: flex-end;
 }
 
-.message.ai {
+.ai-message {
     background-color: #fff;
     align-self: flex-start;
 }
 
-.chat-input-container {
+.chat-input-area {
     display: flex;
     align-items: center;
     padding: 10px;
@@ -121,7 +121,7 @@ body {
     border-top: 1px solid #ddd;
 }
 
-#messageInput {
+#user-input {
     flex-grow: 1;
     border: none;
     border-radius: 20px;
@@ -129,11 +129,12 @@ body {
     font-size: 16px;
     background-color: #fff;
     resize: none;
+    /* Rimosse le proprietà height e min-height */
     max-height: 100px;
     overflow-y: auto;
 }
 
-#sendButton {
+#send-btn {
     background-color: #4b0082;
     color: white;
     border-radius: 50%;
@@ -147,6 +148,6 @@ body {
     transition: transform 0.2s;
 }
 
-#sendButton:active {
+#send-btn:active {
     transform: scale(0.95);
 }
