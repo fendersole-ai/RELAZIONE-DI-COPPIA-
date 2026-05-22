@@ -223,12 +223,14 @@
         chatWindow.scrollTop = chatWindow.scrollHeight;
 
         try {
-            const response = await fetch('/prism', {
+            // Allineato con l'endpoint /chat di app.py
+            const response = await fetch('/chat', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                 },
-                body: JSON.stringify({ session_id: sessionId, input: input }),
+                // Invia il parametro userInput corretto richiesto dal codice Python
+                body: JSON.stringify({ userInput: input }),
             });
 
             if (!response.ok) {
@@ -237,11 +239,15 @@
 
             const data = await response.json();
             chatWindow.removeChild(loadingMessage);
-            addMessage(data.output, 'ai');
+            
+            // Legge il parametro reply restituito da app.py
+            addMessage(data.reply, 'ai');
             
         } catch (error) {
             console.error('Errore:', error);
-            chatWindow.removeChild(loadingMessage);
+            if (chatWindow.contains(loadingMessage)) {
+                chatWindow.removeChild(loadingMessage);
+            }
             addMessage('Si è verificato un errore. Riprova più tardi.', 'ai');
         }
     }
@@ -269,7 +275,6 @@
             sendMessage(messageInput.value);
         }
     });
-
 </script>
 </body>
 </html>
