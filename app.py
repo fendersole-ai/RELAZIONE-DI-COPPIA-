@@ -21,9 +21,7 @@ def chat():
 
     try:
         response = client.models.generate_content(
-            model="gemini-2.5-pro"
-"
-",
+            model="gemini-2.5-pro",
             contents=prompt
         )
         return jsonify({"reply": response.text})
@@ -33,5 +31,3 @@ def chat():
 
 if __name__ == "__main__":
     app.run(debug=True)
-
-
