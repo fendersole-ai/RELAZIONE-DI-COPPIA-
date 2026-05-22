@@ -21,7 +21,8 @@ def chat():
 
     try:
         response = client.models.generate_content(
-            model="gemini-1.5-flash",
+            model="model="gemini-2.5-Pro"
+",
             contents=prompt
         )
         return jsonify({"reply": response.text})
