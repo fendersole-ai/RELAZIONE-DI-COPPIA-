@@ -60,25 +60,15 @@
             cursor: pointer;
             transition: all 0.2s;
         }
-        #accetto {
-            background-color: #6366f1;
-            color: white;
-        }
-        #accetto:hover {
-            background-color: #4f46e5;
-        }
-        #annulla {
-            background-color: #e2e8f0;
-            color: #4a5568;
-        }
-        #annulla:hover {
-            background-color: #cbd5e1;
-        }
+        #accetto { background-color: #6366f1; color: white; }
+        #accetto:hover { background-color: #4f46e5; }
+        #annulla { background-color: #e2e8f0; color: #4a5568; }
+        #annulla:hover { background-color: #cbd5e1; }
         .chat-container {
             width: 100%;
             max-width: 600px;
             height: 90vh;
-            display: none; /* Inizialmente nascosto */
+            display: none;
             flex-direction: column;
             border-radius: 1.5rem;
             background-color: white;
@@ -108,53 +98,12 @@
             word-wrap: break-word;
             box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.05);
         }
-        .message.user {
-            align-self: flex-end;
-            background-color: #d1fae5;
-            border-bottom-right-radius: 0.5rem;
-        }
-        .message.ai {
-            align-self: flex-start;
-            background-color: #e2e8f0;
-            border-bottom-left-radius: 0.5rem;
-        }
-        .chat-input-container {
-            padding: 1rem;
-            border-top: 1px solid #e5e7eb;
-            display: flex;
-            gap: 0.5rem;
-        }
-        #messageInput {
-            flex-grow: 1;
-            padding: 0.75rem 1rem;
-            border-radius: 9999px;
-            border: 1px solid #e5e7eb;
-            outline: none;
-            transition: all 0.2s;
-        }
-        #messageInput:focus {
-            border-color: #6366f1;
-            box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.2);
-        }
-        #sendButton {
-            padding: 0.75rem 1.5rem;
-            background-color: #6366f1;
-            color: white;
-            border-radius: 9999px;
-            font-weight: bold;
-            cursor: pointer;
-            transition: background-color 0.2s;
-        }
-        #sendButton:hover {
-            background-color: #4f46e5;
-        }
-        .loading {
-            align-self: flex-start;
-            padding: 0.75rem 1rem;
-            border-radius: 1.2rem;
-            background-color: #e2e8f0;
-            color: #6b7280;
-        }
+        .message.user { align-self: flex-end; background-color: #d1fae5; border-bottom-right-radius: 0.5rem; }
+        .message.ai { align-self: flex-start; background-color: #e2e8f0; border-bottom-left-radius: 0.5rem; }
+        .chat-input-container { padding: 1rem; border-top: 1px solid #e5e7eb; display: flex; gap: 0.5rem; }
+        #messageInput { flex-grow: 1; padding: 0.75rem 1rem; border-radius: 9999px; border: 1px solid #e5e7eb; outline: none; }
+        #sendButton { padding: 0.75rem 1.5rem; background-color: #6366f1; color: white; border-radius: 9999px; font-weight: bold; cursor: pointer; }
+        .loading { align-self: flex-start; padding: 0.75rem 1rem; border-radius: 1.2rem; background-color: #e2e8f0; color: #6b7280; }
     </style>
 </head>
 <body>
@@ -162,14 +111,7 @@
 <div id="popup-consenso" class="popup-overlay">
     <div class="popup-content">
         <h2>Consenso Informato</h2>
-        <p>
-            Benvenuto in PRISM 2.0, un test gratuito e anonimo disponibile 24h su 24.
-            PRISM è uno strumento di intelligenza artificiale progettato per rilevare possibili indicatori di rischio tramite 10 domande aperte.
-            Non è una diagnosi, non sostituisce il personale specializzato ed è paragonabile a un termometro: indica soltanto il livello di rischio rilevato.
-        </p>
-        <p>
-            Questo test è uno strumento sperimentale basato su intelligenza artificiale. Non è validato come diagnosi clinica o valutazione ufficiale. L’uso è anonimo, gratuito e i dati non vengono memorizzati. L’AI si limita ad analizzare le risposte per generare un indicatore di rischio. Accedendo, confermi di aver compreso queste condizioni.
-        </p>
+        <p>Benvenuto in PRISM 2.0. Utilizzando l'IA, accetti che i dati vengano elaborati per la durata della sessione.</p>
         <div class="popup-buttons">
             <button id="accetto">ACCETTO</button>
             <button id="annulla">ANNULLA</button>
@@ -178,12 +120,10 @@
 </div>
 
 <div id="chat-container" class="chat-container">
-    <div class="chat-header">
-        Protocollo PRISM 2.0
-    </div>
+    <div class="chat-header">Protocollo PRISM 2.0</div>
     <div id="chat-window" class="chat-window"></div>
     <div class="chat-input-container">
-        <input type="text" id="messageInput" placeholder="Scrivi il tuo messaggio..." class="flex-grow">
+        <input type="text" id="messageInput" placeholder="Scrivi il tuo messaggio...">
         <button id="sendButton">Invia</button>
     </div>
 </div>
@@ -191,12 +131,11 @@
 <script>
     const popupConsenso = document.getElementById('popup-consenso');
     const chatContainer = document.getElementById('chat-container');
-    const accettoBtn = document.getElementById('accetto');
-    const annullaBtn = document.getElementById('annulla');
     const chatWindow = document.getElementById('chat-window');
     const messageInput = document.getElementById('messageInput');
     const sendButton = document.getElementById('sendButton');
     
+    // Genera o recupera il sessionId
     let sessionId = localStorage.getItem('sessionId') || crypto.randomUUID();
     localStorage.setItem('sessionId', sessionId);
 
@@ -210,71 +149,40 @@
 
     async function sendMessage(input) {
         if (input.trim() === '') return;
-
-        if (input !== '_START_PROTOCOL_') {
-            addMessage(input, 'user');
-        }
+        if (input !== '_START_PROTOCOL_') addMessage(input, 'user');
         messageInput.value = '';
         
         const loadingMessage = document.createElement('div');
         loadingMessage.classList.add('loading');
         loadingMessage.textContent = 'L’IA sta pensando...';
         chatWindow.appendChild(loadingMessage);
-        chatWindow.scrollTop = chatWindow.scrollHeight;
 
         try {
-            // Allineato con l'endpoint /chat di app.py
             const response = await fetch('/chat', {
                 method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                // Invia il parametro userInput corretto richiesto dal codice Python
-                body: JSON.stringify({ userInput: input }),
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ 
+                    userInput: input,
+                    sessionId: sessionId 
+                }),
             });
-
-            if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
-            }
-
             const data = await response.json();
             chatWindow.removeChild(loadingMessage);
-            
-            // Legge il parametro reply restituito da app.py
             addMessage(data.reply, 'ai');
-            
         } catch (error) {
-            console.error('Errore:', error);
-            if (chatWindow.contains(loadingMessage)) {
-                chatWindow.removeChild(loadingMessage);
-            }
-            addMessage('Si è verificato un errore. Riprova più tardi.', 'ai');
+            chatWindow.removeChild(loadingMessage);
+            addMessage('Errore di connessione.', 'ai');
         }
     }
 
-    accettoBtn.addEventListener('click', () => {
+    document.getElementById('accetto').addEventListener('click', () => {
         popupConsenso.style.display = 'none';
         chatContainer.style.display = 'flex';
         sendMessage('_START_PROTOCOL_');
     });
 
-    annullaBtn.addEventListener('click', () => {
-        addMessage('Hai annullato. Ricarica la pagina per riprovare.', 'ai');
-        setTimeout(() => {
-            window.location.reload();
-        }, 3000);
-    });
-
-    sendButton.addEventListener('click', () => {
-        sendMessage(messageInput.value);
-    });
-
-    messageInput.addEventListener('keypress', (e) => {
-        if (e.key === 'Enter') {
-            e.preventDefault();
-            sendMessage(messageInput.value);
-        }
-    });
+    document.getElementById('annulla').addEventListener('click', () => window.location.reload());
+    sendButton.addEventListener('click', () => sendMessage(messageInput.value));
 </script>
 </body>
 </html>
