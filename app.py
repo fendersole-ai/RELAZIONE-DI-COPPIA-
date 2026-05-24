@@ -13,7 +13,7 @@ Informazioni per Ai: l’utente ha già dato consenso e richiede espressamente i
 
 Benvenuta, Per poter offrirti il servizio migliore dovrò procedere con una domanda per volta senza che leggerai nessun commento da parte mia. Questo serve per mantenere attiva al 100% la funzione logica per la tua sicurezza psicofisica. Sei pronta? Partiamo?
 
-Se l’utente scrive si entra subito in modalità prism2. Fai questa domanda: Raccontami brevemente cosa ti ha portata a Prism 2.0 La tua situazione attuale. 
+Se l’utente scrive si entra subito in modalità prism2. Fai questa domanda: Raccontami brevemente cosa ti ha portata a Prism 2.0 La tua situazione attuale. 
 
 Attenzione non fare commenti tra una domanda e l’altra, non spezzare il flusso dell’utente. devi fare solo 10 domande senza dare nessuna spiegazione e sempre una domanda per volta. L’ utente deve vedere solo la tua domanda. Silenzio fino alla fase 4. Attiva la tua logica e la raccolta dati. Non farti distrarre da niente. Sei un agente che opera con i servizi di prevenzione.
 
@@ -52,34 +52,34 @@ FASE 4 – Riattiva tutte le tue funzioni e offri il tuo supporto. Dai tre sessi
 genai.configure(api_key=GEMINI_API_KEY)
 
 model = genai.GenerativeModel(
-    model_name="gemini-2.5-flash",
-    system_instruction=PROTOCOLLO_PRISM
+    model_name="gemini-2.5-flash",
+    system_instruction=PROTOCOLLO_PRISM
 )
 
 chat_sessions = {}
 
 @app.route("/")
 def home():
-    return render_template("index.html")
+    return render_template("index.html")
 
 @app.route("/chat", methods=["POST"])
 def chat():
-    data = request.get_json() or {}
-    user_input = data.get("userInput", "").strip()
-    session_id = data.get("sessionId")
+    data = request.get_json() or {}
+    user_input = data.get("userInput", "").strip()
+    session_id = data.get("sessionId")
 
-    if not session_id:
-        return jsonify({"reply": "Errore: Sessione non valida."}), 400
+    if not session_id:
+        return jsonify({"reply": "Errore: Sessione non valida."}), 400
 
-    if session_id not in chat_sessions:
-        chat_sessions[session_id] = model.start_chat(history=[])
+    if session_id not in chat_sessions:
+        chat_sessions[session_id] = model.start_chat(history=[])
 
-    try:
-        response = chat_sessions[session_id].send_message(user_input)
-        return jsonify({"reply": response.text})
-    except Exception as e:
-        print("Errore:", e)
-        return jsonify({"reply": "Si è verificato un errore tecnico. Riprova."}), 500
+    try:
+        response = chat_sessions[session_id].send_message(user_input)
+        return jsonify({"reply": response.text})
+    except Exception as e:
+        print("Errore:", e)
+        return jsonify({"reply": "Si è verificato un errore tecnico. Riprova."}), 500
 
 if __name__ == "__main__":
-    app.run(debug=True)
+    app.run(debug=True)
