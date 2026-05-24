@@ -12,7 +12,7 @@ GEMINI_API_KEY = os.environ.get("GOOGLE_API_KEY")
 PROTOCOLLO_PRISM = os.environ.get("PROTOCOLLO_PRISM", "")
 
 genai.configure(api_key=GEMINI_API_KEY)
-model = genai.GenerativeModel("gemini-1.5-flash-001")
+model = genai.GenerativeModel("gemini-2.5-flash")
 
 # Dizionario per mantenere lo stato della conversazione per ogni sessione
 chat_sessions = {}
