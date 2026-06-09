@@ -7,17 +7,97 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700&display=swap');
-        body { font-family: 'Inter', sans-serif; background-color: #f0f2f5; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
-        .popup-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0, 0, 0, 0.5); display: flex; justify-content: center; align-items: center; z-index: 1000; }
-        .popup-content { background-color: white; padding: 2rem; border-radius: 1.5rem; box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1); max-width: 500px; text-align: center; line-height: 1.5; }
-        .popup-buttons { display: flex; justify-content: center; gap: 1rem; margin-top: 1.5rem; }
-        .popup-buttons button { padding: 0.75rem 2rem; border-radius: 0.5rem; font-weight: bold; cursor: pointer; transition: all 0.2s; border: none; }
-        #accetto { background-color: #48bb78; color: white; }
-        #annulla { background-color: #f56565; color: white; }
-        .chat-container { width: 100%; max-width: 600px; height: 90vh; display: none; flex-direction: column; border-radius: 1.5rem; background-color: white; box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1); }
-        .chat-header { background-color: #6366f1; color: white; padding: 1rem; border-top-left-radius: 1.5rem; border-top-right-radius: 1.5rem; text-align: center; font-weight: bold; }
-        .chat-window { flex-grow: 1; padding: 1.5rem; overflow-y: auto; display: flex; flex-direction: column; gap: 1rem; }
-        .message { max-width: 80%; padding: 0.75rem 1rem; border-radius: 1.2rem; word-wrap: break-word; box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.05); }
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f0f2f5;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+        .popup-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+        .popup-content {
+            background-color: white;
+            padding: 2rem;
+            border-radius: 1.5rem;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+            max-width: 500px;
+            text-align: center;
+            line-height: 1.5;
+        }
+        .popup-content h2 {
+            font-weight: bold;
+            font-size: 1.5rem;
+            margin-bottom: 1rem;
+        }
+        .popup-content p {
+            margin-bottom: 1rem;
+            font-size: 0.875rem;
+            color: #4a5568;
+        }
+        .popup-buttons {
+            display: flex;
+            justify-content: center;
+            gap: 1rem;
+            margin-top: 1.5rem;
+        }
+        .popup-buttons button {
+            padding: 0.75rem 1.5rem;
+            border-radius: 9999px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        #accetto { background-color: #6366f1; color: white; }
+        #accetto:hover { background-color: #4f46e5; }
+        #annulla { background-color: #e2e8f0; color: #4a5568; }
+        #annulla:hover { background-color: #cbd5e1; }
+        .chat-container {
+            width: 100%;
+            max-width: 600px;
+            height: 90vh;
+            display: none;
+            flex-direction: column;
+            border-radius: 1.5rem;
+            background-color: white;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+        }
+        .chat-header {
+            background-color: #6366f1;
+            color: white;
+            padding: 1rem;
+            border-top-left-radius: 1.5rem;
+            border-top-right-radius: 1.5rem;
+            text-align: center;
+            font-weight: bold;
+        }
+        .chat-window {
+            flex-grow: 1;
+            padding: 1.5rem;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+        .message {
+            max-width: 80%;
+            padding: 0.75rem 1rem;
+            border-radius: 1.2rem;
+            word-wrap: break-word;
+            box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.05);
+        }
         .message.user { align-self: flex-end; background-color: #d1fae5; border-bottom-right-radius: 0.5rem; }
         .message.ai { align-self: flex-start; background-color: #e2e8f0; border-bottom-left-radius: 0.5rem; }
         .chat-input-container { padding: 1rem; border-top: 1px solid #e5e7eb; display: flex; gap: 0.5rem; }
@@ -30,20 +110,14 @@
 
 <div id="popup-consenso" class="popup-overlay">
     <div class="popup-content">
-        <p style="font-size: 1rem; margin-bottom: 1rem;">Questo strumento è sostenuto da</p>
-        <img src="image_5287be.png" alt="PRISM 2.0" style="max-width: 200px; margin: 0 auto 2rem auto; display: block;">
-
-        <div style="border: 1px solid #e2e8f0; padding: 1.5rem; border-radius: 1rem; background-color: #f8fafc;">
-            <p style="font-size: 0.875rem; color: #4a5568; margin-bottom: 1.5rem;">
-                Questo strumento ha valore di test orientativo. 
-                Se desideri conservare il risultato finale, ricordati di copiarlo prima di chiudere la conversazione, 
-                poiché il sistema non ne conserverà alcuna copia.
-            </p>
-            <p style="font-weight: bold; font-size: 1.1rem; margin-bottom: 1rem;">Sei pronta a entrare in Prism 2.0?</p>
-            <div class="popup-buttons">
-                <button id="accetto">SI</button>
-                <button id="annulla">NO</button>
-            </div>
+        <img src="image_5287be.png" alt="PRISM 2.0" style="width: 100px; margin: 0 auto 1rem auto;">
+        
+        <h2>Consenso Informato</h2>
+        <p>Benvenuto in PRISM 2.0. Utilizzando l'IA, accetti che i dati vengano elaborati per la durata della sessione.</p>
+        
+        <div class="popup-buttons">
+            <button id="accetto">ACCETTO</button>
+            <button id="annulla">ANNULLA</button>
         </div>
     </div>
 </div>
@@ -64,8 +138,9 @@
     const messageInput = document.getElementById('messageInput');
     const sendButton = document.getElementById('sendButton');
     
-    // Sessione anonima temporanea (nuovo ID ad ogni caricamento)
-    let sessionId = crypto.randomUUID();
+    // Genera o recupera il sessionId
+    let sessionId = localStorage.getItem('sessionId') || crypto.randomUUID();
+    localStorage.setItem('sessionId', sessionId);
 
     function addMessage(text, sender) {
         const messageElement = document.createElement('div');
@@ -89,7 +164,10 @@
             const response = await fetch('/chat', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ userInput: input, sessionId: sessionId }),
+                body: JSON.stringify({ 
+                    userInput: input,
+                    sessionId: sessionId 
+                }),
             });
             const data = await response.json();
             chatWindow.removeChild(loadingMessage);
